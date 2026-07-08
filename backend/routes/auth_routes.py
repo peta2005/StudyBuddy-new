@@ -244,7 +244,7 @@ def oauth_login(provider: str):
 
     # Normalize request domain to match the configured redirect URI domain.
     # This prevents session cookie loss caused by mismatching localhost vs 127.0.0.1.
-    redirect_uri = os.getenv(f"{provider.upper()}_REDIRECT_URI")
+    redirect_uri = (os.getenv(f"{provider.upper()}_REDIRECT_URI") or "").strip()
     if redirect_uri:
         from urllib.parse import urlparse
         parsed_redirect = urlparse(redirect_uri)
