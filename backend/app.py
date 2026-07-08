@@ -42,14 +42,8 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY") or os.getenv("JWT_SECRET") or "dev-change-me"
 init_db()
 
-# Preload embedding model on startup so uploads/questions don't wait for it
-from utils.embedding_utils import get_embedding_model
-try:
-    logger.info("Preloading embedding model...")
-    get_embedding_model()
-    logger.info("Embedding model preloaded successfully!")
-except Exception as preload_exc:
-    logger.exception("Failed to preload embedding model: %s", preload_exc)
+# Preloading disabled - using Hugging Face Inference API
+
 
 frontend_origins = os.getenv(
     "FRONTEND_URL",
