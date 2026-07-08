@@ -21,20 +21,29 @@ def get_embeddings(texts: list[str]) -> np.ndarray:
         response = requests.post(API_URL, headers=headers, json={"inputs": texts}, timeout=25)
         if response.status_code == 200:
             raw_embeddings = response.json()
-            arr = np.array(raw_embeddings)
             
-            # If the response is a 3D array (batch_size, sequence_length, embedding_dim),
-            # perform mean pooling across the token sequence (axis 1)
-            if len(arr.shape) == 3:
-                arr = np.mean(arr, axis=1)
-            # If a single text was passed and it returned a 2D array [sequence_length, dim]
-            elif len(arr.shape) == 2 and len(texts) == 1:
-                arr = np.mean(arr, axis=0, keepdims=True)
-            # If it's a 1D array, reshape to 2D
-            elif len(arr.shape) == 1:
-                arr = arr.reshape(1, -1)
+            # If the response is a single dictionary or direct error
+            if isinstance(raw_embeddings, dict) and "error" in raw_embeddings:
+                raise ValueError(f"Hugging Face error: {raw_embeddings['error']}")
                 
-            return arr.astype("float32")
+            pooled_embeddings = []
+            
+            # Process each text's embedding output individually
+            for item in raw_embeddings:
+                item_arr = np.array(item)
+                
+                # If item_arr is 2D (sequence_length, dim), mean-pool to 1D (dim,)
+                if len(item_arr.shape) == 2:
+                    pooled = np.mean(item_arr, axis=0)
+                # If item_arr is 1D (already pooled to dim,), keep it
+                elif len(item_arr.shape) == 1:
+                    pooled = item_arr
+                else:
+                    raise ValueError(f"Unexpected item embedding shape: {item_arr.shape}")
+                    
+                pooled_embeddings.append(pooled)
+                
+            return np.array(pooled_embeddings).astype("float32")
         else:
             logger.error("Hugging Face API failed: %s - %s", response.status_code, response.text)
             raise ValueError(f"Hugging Face API failed: {response.text}")
