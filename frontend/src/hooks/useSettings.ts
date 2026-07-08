@@ -17,13 +17,20 @@ const DEFAULT_SETTINGS: AppSettings = {
   compactMode: false,
   enterToSend: true,
   showSources: true,
-  backendUrl: "http://127.0.0.1:5000",
+  backendUrl: import.meta.env.VITE_API_URL || "http://127.0.0.1:5000",
 };
 
 function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // If the stored url is the default localhost address but a production VITE_API_URL is configured, override it.
+      if ((parsed.backendUrl === "http://127.0.0.1:5000" || parsed.backendUrl === "http://localhost:5000") && import.meta.env.VITE_API_URL) {
+        parsed.backendUrl = import.meta.env.VITE_API_URL;
+      }
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
   } catch {
     /* ignore */
   }
