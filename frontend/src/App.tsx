@@ -11,7 +11,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { Plus, Clock, MessageSquarePlus, BookOpen, Trash2, LogOut, Loader2 } from "lucide-react";
+import { Plus, Clock, MessageSquarePlus, BookOpen, Trash2, LogOut, Loader2, Menu, X } from "lucide-react";
 import { ChatInterface } from "@/components/ChatInterface";
 import { apiFetch } from "@/lib/apiClient";
 import { useSettings } from "@/hooks/useSettings";
@@ -50,6 +50,7 @@ function StudyBuddyApp() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { settings } = useSettings();
   const baseUrl = settings.backendUrl.replace(/\/$/, "");
@@ -176,12 +177,25 @@ function StudyBuddyApp() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      {/* Mobile hamburger button */}
+      <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)}>
+        <Menu size={22} />
+      </button>
+
+      {/* Sidebar overlay for mobile */}
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <aside className={`sidebar ${sidebarOpen ? "sidebar--open" : ""}`}>
         <div className="sidebar-logo">
           <div className="logo-icon">
             <BookOpen size={18} />
           </div>
           <span className="logo-text">Smart Study Buddy</span>
+          <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
+            <X size={18} />
+          </button>
         </div>
 
         <div className="sidebar-user">
@@ -198,7 +212,10 @@ function StudyBuddyApp() {
           {chats.map((chat) => (
             <div
               key={chat.id}
-              onClick={() => setCurrentChatId(chat.id)}
+              onClick={() => {
+                setCurrentChatId(chat.id);
+                setSidebarOpen(false);
+              }}
               className={`nav-item nav-item--chat ${currentChatId === chat.id ? "nav-item--active" : ""}`}
             >
               <MessageSquarePlus size={16} />
@@ -216,12 +233,12 @@ function StudyBuddyApp() {
           ))}
         </nav>
 
-        <button className="sidebar-logout-btn" onClick={() => signOut()}>
+        <button className="sidebar-logout-btn" onClick={() => { signOut(); setSidebarOpen(false); }}>
           <LogOut size={15} />
           Sign out
         </button>
 
-        <button className="new-chat-btn" onClick={createNewChat}>
+        <button className="new-chat-btn" onClick={() => { createNewChat(); setSidebarOpen(false); }}>
           <Plus size={16} />
           New Chat
         </button>
