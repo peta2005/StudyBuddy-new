@@ -1,0 +1,23 @@
+# Python
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/uploads/
+backend/vector_store/
+*.pyc
+
+# Environment variables
+.env
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build
+dist/
+build/
+
+# Databases
+*.db
+*.sqlite
+

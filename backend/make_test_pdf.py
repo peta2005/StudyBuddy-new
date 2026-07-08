@@ -1,0 +1,36 @@
+"""Create a minimal but valid PDF for upload testing."""
+import struct
+
+body = b"""%PDF-1.4
+1 0 obj<</Type /Catalog /Pages 2 0 R>>endobj
+2 0 obj<</Type /Pages /Kids [3 0 R] /Count 1>>endobj
+3 0 obj<</Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources<</Font<</F1 5 0 R>>>>>>endobj
+4 0 obj<</Length 121>>
+stream
+BT /F1 12 Tf 72 720 Td (StudyBuddy Test Document) Tj 0 -20 Td (Python was created by Guido van Rossum in 1991.) Tj ET
+endstream
+endobj
+5 0 obj<</Type /Font /Subtype /Type1 /BaseFont /Helvetica>>endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000274 00000 n 
+0000000447 00000 n 
+trailer<</Size 6 /Root 1 0 R>>
+startxref
+526
+%%EOF"""
+
+with open("test_upload.pdf", "wb") as f:
+    f.write(body)
+
+# Verify first 4 bytes
+with open("test_upload.pdf", "rb") as f:
+    magic = f.read(4)
+
+print(f"First 4 bytes: {magic}")
+print(f"Is valid PDF magic: {magic == b'%PDF'}")
+print(f"File size: {len(body)} bytes")
