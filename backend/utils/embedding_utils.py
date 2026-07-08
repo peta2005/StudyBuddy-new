@@ -18,7 +18,7 @@ def get_embeddings(texts: list[str]) -> np.ndarray:
         headers["Authorization"] = f"Bearer {HF_TOKEN}"
     
     try:
-        response = requests.post(API_URL, headers=headers, json={"inputs": texts}, timeout=25)
+        response = requests.post(API_URL, headers=headers, json={"inputs": texts}, timeout=15)
         if response.status_code == 200:
             raw_embeddings = response.json()
             
@@ -45,10 +45,18 @@ def get_embeddings(texts: list[str]) -> np.ndarray:
                 
             return np.array(pooled_embeddings).astype("float32")
         else:
-            logger.error("Hugging Face API failed: %s - %s", response.status_code, response.text)
-            raise ValueError(f"Hugging Face API failed: {response.text}")
+            logger.warning("Hugging Face API returned status code %s. Attempting local fallback...", response.status_code)
     except Exception as exc:
-        logger.exception("Failed to get embeddings from Hugging Face: %s", exc)
+        logger.warning("Hugging Face API request failed (e.g. offline or DNS block): %s. Attempting local fallback...", exc)
+        
+    # Local fallback for local development or API outages
+    try:
+        from sentence_transformers import SentenceTransformer
+        logger.info("Using local SentenceTransformer fallback...")
+        local_model = SentenceTransformer("all-MiniLM-L6-v2")
+        return local_model.encode(texts, show_progress_bar=False).astype("float32")
+    except Exception as local_exc:
+        logger.exception("Both Hugging Face API and local SentenceTransformer fallback failed: %s", local_exc)
         raise
 
 
