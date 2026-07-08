@@ -20,8 +20,21 @@ def get_embeddings(texts: list[str]) -> np.ndarray:
     try:
         response = requests.post(API_URL, headers=headers, json={"inputs": texts}, timeout=25)
         if response.status_code == 200:
-            embeddings = response.json()
-            return np.array(embeddings).astype("float32")
+            raw_embeddings = response.json()
+            arr = np.array(raw_embeddings)
+            
+            # If the response is a 3D array (batch_size, sequence_length, embedding_dim),
+            # perform mean pooling across the token sequence (axis 1)
+            if len(arr.shape) == 3:
+                arr = np.mean(arr, axis=1)
+            # If a single text was passed and it returned a 2D array [sequence_length, dim]
+            elif len(arr.shape) == 2 and len(texts) == 1:
+                arr = np.mean(arr, axis=0, keepdims=True)
+            # If it's a 1D array, reshape to 2D
+            elif len(arr.shape) == 1:
+                arr = arr.reshape(1, -1)
+                
+            return arr.astype("float32")
         else:
             logger.error("Hugging Face API failed: %s - %s", response.status_code, response.text)
             raise ValueError(f"Hugging Face API failed: {response.text}")
