@@ -4,21 +4,34 @@ import pymysql.cursors
 from contextlib import contextmanager
 
 def _get_config():
+    host = os.getenv("DB_HOST", "localhost").strip()
+    port_str = os.getenv("DB_PORT", "3306").strip()
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+    database = os.getenv("DB_NAME")
+    
+    if user:
+        user = user.strip()
+    if password:
+        password = password.strip()
+    if database:
+        database = database.strip()
+
     config = {
-        "host":     os.getenv("DB_HOST", "localhost"),
-        "port":     int(os.getenv("DB_PORT", "3306")),
-        "user":     os.getenv("DB_USER"),
-        "password": os.getenv("DB_PASSWORD"),
-        "database": os.getenv("DB_NAME"),
+        "host":     host,
+        "port":     int(port_str),
+        "user":     user,
+        "password": password,
+        "database": database,
         "cursorclass": pymysql.cursors.DictCursor,
         "autocommit": False,
     }
     
     # Enable SSL if DB_SSL is set to "true"
-    if os.getenv("DB_SSL", "false").lower() == "true":
+    if os.getenv("DB_SSL", "false").lower().strip() == "true":
         ca_path = os.getenv("DB_SSL_CA")
         if ca_path:
-            config["ssl"] = {"ca": ca_path}
+            config["ssl"] = {"ca": ca_path.strip()}
         else:
             config["ssl"] = {"ssl_check_hostname": False}
             
