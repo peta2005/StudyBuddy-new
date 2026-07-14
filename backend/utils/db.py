@@ -4,7 +4,7 @@ import pymysql.cursors
 from contextlib import contextmanager
 
 def _get_config():
-    return {
+    config = {
         "host":     os.getenv("DB_HOST", "localhost"),
         "port":     int(os.getenv("DB_PORT", "3306")),
         "user":     os.getenv("DB_USER"),
@@ -13,6 +13,16 @@ def _get_config():
         "cursorclass": pymysql.cursors.DictCursor,
         "autocommit": False,
     }
+    
+    # Enable SSL if DB_SSL is set to "true"
+    if os.getenv("DB_SSL", "false").lower() == "true":
+        ca_path = os.getenv("DB_SSL_CA")
+        if ca_path:
+            config["ssl"] = {"ca": ca_path}
+        else:
+            config["ssl"] = {"ssl_check_hostname": False}
+            
+    return config
 
 @contextmanager
 def get_connection():
